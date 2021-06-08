@@ -1,0 +1,48 @@
+version: "3"
+services:
+  mysql:
+    image: mysql:5.7
+    env_file: ./mysql/mysql.env
+    environment:
+      - TZ=Asia/Tokyo
+    ports:
+      - '3306:3306'
+    # ホスト側のmysql/confフォルダをコンテナの/etc/mysql/conf.d/ディレクトリにマウントする。
+    # 「mysqldata」というボリュームをコンテナの/var/lib/mysql/ディレクトリにマウントすることで、
+    # コンテナが削除されてもデータが消えずに保持されるようにしています
+    #（ホスト側のフォルダをそのままmysqlのデータ保存先としてマウントするとWindows環境で上手く動かなかったので、Docker側で管理されたボリュームをマウントするように修正しました）。
+    volumes:
+      - ./mysql/conf:/etc/mysql/conf.d/:ro
+      - mysqldata:/var/lib/mysql
+    networks:
+      - backend
+
+  app:
+    # 起動するイメージを指定（ここではNode.js v14-alpineの公式イメージ）
+    image: node:14-alpine
+    # 環境変数を設定
+    environment:
+      - TZ=Asia/Tokyo
+      - DEBUG=app:*
+    tty: true
+    # ホスト側のポート:コンテナのポート
+    ports:
+      - "4000:4000"
+    # ソースコードを格納するフォルダをマウント
+    #（ホスト側の./srcをコンテナの/appにマウント）
+    volumes:
+      - ./src:/app
+    # 起動時のカレントフォルダを指定
+    working_dir: /app
+    # 起動後に実行するコマンドを指定
+    command: npm run dev
+    networks:
+      - backend
+    depends_on:
+      - mysql
+
+networks:
+  backend:
+
+volumes:
+  mysqldata:
