@@ -3,6 +3,7 @@ import { graphqlHTTP } from "express-graphql";
 import { schema } from "./Schema";
 import cors from "cors";
 import { createConnection } from "typeorm";
+import { Users } from "./Entities/Users";
 
 const main = async () => {
   // db接続設定
@@ -16,7 +17,7 @@ const main = async () => {
     database: "nodecrud",
     logging: true,
     synchronize: false,
-    entities: [],
+    entities: [Users],
   });
   const app = express();
   app.use(cors());
